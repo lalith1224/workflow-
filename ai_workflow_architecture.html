@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Workflow Architecture</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #f0f3fb;
+  --surface:   #ffffff;
+  --surface2:  #f5f7fd;
+  --border:    #d4dbef;
+  --border2:   #b8c4e0;
+  --text:      #111827;
+  --muted:     #374151;
+  --dim:       #6b7280;
+
+  --blue:      #1d4ed8;
+  --blue-bg:   #eff6ff;
+  --blue-bd:   #93c5fd;
+
+  --green:     #15803d;
+  --green-bg:  #f0fdf4;
+  --green-bd:  #6ee7b7;
+
+  --orange:    #c2410c;
+  --orange-bg: #fff7ed;
+  --orange-bd: #fdba74;
+
+  --purple:    #6d28d9;
+  --purple-bg: #f5f3ff;
+  --purple-bd: #c4b5fd;
+
+  --yellow:    #92400e;
+  --yellow-bg: #fffbeb;
+  --yellow-bd: #fcd34d;
+
+  --red:       #b91c1c;
+  --red-bg:    #fef2f2;
+  --red-bd:    #fca5a5;
+
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Syne', sans-serif;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 20px;
+  line-height: 1.7;
+  padding: 60px 72px;
+  max-width: 1500px;
+  margin: 0 auto;
+}
+
+/* ── EYEBROW ── */
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 14px;
+  letter-spacing: .22em;
+  color: var(--green);
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  display: flex; align-items: center; gap: 10px;
+}
+.eyebrow::before { content:'●'; font-size:10px; }
+
+/* ── HERO ── */
+.hero {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; flex-wrap: wrap;
+  gap: 28px; margin-bottom: 56px;
+}
+h1 {
+  font-size: 68px; font-weight: 800;
+  line-height: 1.05; color: var(--text);
+  letter-spacing: -.025em; margin-bottom: 16px;
+}
+.hero-sub { font-size: 22px; color: var(--muted); letter-spacing: .02em; }
+.hero-sub span { margin: 0 8px; color: var(--dim); }
+
+.hero-right { display: flex; flex-direction: column; align-items: flex-end; gap: 16px; }
+.version-badge {
+  display: inline-flex; align-items: center; gap: 9px;
+  background: var(--purple-bg); border: 2px solid var(--purple-bd);
+  border-radius: 9px; padding: 10px 22px;
+  font-family: var(--mono); font-size: 16px;
+  color: var(--purple); font-weight: 700;
+}
+.stack-pills { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
+.pill {
+  display: flex; align-items: center; gap: 9px;
+  background: var(--surface); border: 2px solid var(--border2);
+  border-radius: 26px; padding: 9px 20px;
+  font-size: 17px; font-weight: 600; color: var(--text);
+  box-shadow: 0 2px 6px rgba(0,0,0,.07);
+}
+.dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── SECTION LABEL ── */
+.sec-label {
+  font-family: var(--mono); font-size: 13px;
+  letter-spacing: .2em; color: var(--dim);
+  text-transform: uppercase; margin-bottom: 26px;
+  display: flex; align-items: center; gap: 14px;
+}
+.sec-label::after { content:''; flex:1; height:2px; background:var(--border); }
+section { margin-bottom: 68px; }
+
+/* ── PIPELINE ── */
+.pipeline {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 18px;
+}
+.pipe-card {
+  background: var(--surface);
+  border: 2px solid var(--border2);
+  border-radius: 16px;
+  padding: 32px 24px;
+  box-shadow: 0 3px 14px rgba(0,0,0,.07);
+}
+.pipe-badge {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 13px; letter-spacing: .1em;
+  text-transform: uppercase; font-weight: 700;
+  padding: 6px 13px; border-radius: 7px; margin-bottom: 16px;
+}
+.b-in   { background:var(--blue-bg);   color:var(--blue);   border:2px solid var(--blue-bd); }
+.b-ret  { background:var(--green-bg);  color:var(--green);  border:2px solid var(--green-bd); }
+.b-aug  { background:var(--orange-bg); color:var(--orange); border:2px solid var(--orange-bd); }
+.b-inf  { background:var(--purple-bg); color:var(--purple); border:2px solid var(--purple-bd); }
+.b-mem  { background:var(--yellow-bg); color:var(--yellow); border:2px solid var(--yellow-bd); }
+
+.pipe-icon  { font-size: 34px; margin-bottom: 14px; display: block; }
+.pipe-title { font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 12px; }
+.pipe-desc  { font-size: 17px; color: var(--muted); line-height: 1.7; }
+
+/* ── TWO COL ── */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+
+/* ── ARCH ── */
+.arch-col { display: flex; flex-direction: column; gap: 20px; }
+.arch-card {
+  background: var(--surface);
+  border: 2px solid var(--border2);
+  border-radius: 16px;
+  padding: 30px 28px;
+  box-shadow: 0 3px 14px rgba(0,0,0,.07);
+}
+.arch-hdr { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 18px; }
+.arch-icon  { font-size: 30px; flex-shrink: 0; margin-top: 3px; }
+.arch-title { font-size: 22px; font-weight: 800; color: var(--text); }
+.arch-sub   { font-family: var(--mono); font-size: 15px; color: var(--muted); margin-top: 5px; }
+
+.tag-row { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 16px; }
+.tag {
+  font-family: var(--mono); font-size: 14px;
+  background: var(--surface2); border: 2px solid var(--border2);
+  border-radius: 7px; padding: 6px 13px;
+  color: var(--muted); font-weight: 600;
+}
+.tag.bl { color:var(--blue);   background:var(--blue-bg);   border-color:var(--blue-bd); }
+.tag.gr { color:var(--green);  background:var(--green-bg);  border-color:var(--green-bd); }
+
+.http-line {
+  font-family: var(--mono); font-size: 16px;
+  background: var(--surface2); border: 2px solid var(--border);
+  border-radius: 9px; padding: 13px 20px; margin: 18px 0;
+  color: var(--muted);
+}
+.http-line .m { color: var(--green); font-weight: 700; }
+
+.server-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 18px; }
+.server-card {
+  background: var(--surface2);
+  border: 2px solid var(--border2);
+  border-radius: 12px; padding: 20px 18px;
+}
+.server-hdr  { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.server-icon { font-size: 24px; }
+.server-name { font-size: 18px; font-weight: 700; color: var(--text); }
+.server-sub  { font-family: var(--mono); font-size: 13px; color: var(--muted); margin-top: 4px; }
+.server-meta { font-size: 16px; color: var(--muted); display: flex; flex-direction: column; gap: 6px; }
+
+/* ── WORKFLOW ── */
+.wf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.wf-card {
+  background: var(--surface);
+  border: 2px solid var(--border2);
+  border-radius: 16px; padding: 28px 24px;
+  box-shadow: 0 3px 14px rgba(0,0,0,.07);
+}
+.wf-hdr { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 22px; }
+.wf-num {
+  width: 38px; height: 38px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 18px; font-weight: 700; flex-shrink: 0;
+}
+.n1 { background:var(--blue-bg);   color:var(--blue);   border:2px solid var(--blue-bd); }
+.n2 { background:var(--green-bg);  color:var(--green);  border:2px solid var(--green-bd); }
+.n3 { background:var(--orange-bg); color:var(--orange); border:2px solid var(--orange-bd); }
+.n4 { background:var(--purple-bg); color:var(--purple); border:2px solid var(--purple-bd); }
+
+.wf-title { font-size: 20px; font-weight: 800; color: var(--text); }
+.wf-sub   { font-size: 16px; color: var(--muted); margin-top: 4px; }
+
+.steps { display: flex; flex-direction: column; gap: 16px; }
+.step  { display: flex; gap: 14px; align-items: flex-start; }
+.snum {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--surface2); border: 2px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 14px;
+  color: var(--muted); flex-shrink: 0; margin-top: 3px; font-weight: 700;
+}
+.slabel {
+  font-family: var(--mono); font-size: 12px; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--dim);
+  margin-bottom: 5px; font-weight: 700;
+}
+.stext { font-size: 17px; color: var(--muted); line-height: 1.65; }
+.stext code {
+  font-family: var(--mono); font-size: 15px; color: var(--blue);
+  background: var(--blue-bg); border: 1.5px solid var(--blue-bd);
+  border-radius: 5px; padding: 2px 6px;
+}
+.hg { color: var(--green);  font-weight: 700; }
+.ho { color: var(--orange); font-weight: 700; }
+.hp { color: var(--purple); font-weight: 700; }
+
+/* ── MEMORY SECTION ── */
+.mem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+.mem-card {
+  background: var(--surface);
+  border: 2px solid var(--border2);
+  border-radius: 16px; padding: 32px 28px;
+  box-shadow: 0 3px 14px rgba(0,0,0,.07);
+}
+.mem-title { font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 24px; }
+
+.mem-item {
+  display: flex; align-items: flex-start; gap: 16px;
+  padding: 18px 20px; margin-bottom: 14px;
+  background: var(--surface2); border: 2px solid var(--border);
+  border-radius: 12px; font-size: 18px; color: var(--muted); line-height: 1.65;
+}
+.midx {
+  font-family: var(--mono); font-size: 13px; font-weight: 700;
+  padding: 4px 9px; border-radius: 7px;
+  flex-shrink: 0; margin-top: 3px; white-space: nowrap;
+}
+.i1 { background:var(--blue-bg);   color:var(--blue);   border:2px solid var(--blue-bd); }
+.i2 { background:var(--green-bg);  color:var(--green);  border:2px solid var(--green-bd); }
+.i3 { background:var(--purple-bg); color:var(--purple); border:2px solid var(--purple-bd); }
+
+.hl-g { color:var(--green);  font-weight: 700; }
+.hl-b { color:var(--blue);   font-weight: 700; }
+.hl-p { color:var(--purple); font-weight: 700; }
+
+.vs-title { font-size: 21px; font-weight: 800; color: var(--text); margin: 28px 0 18px; }
+.vs-grid  { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.vs-box   { border-radius: 12px; padding: 20px 18px; }
+.vs-trad  { background:var(--red-bg);   border:2px solid var(--red-bd); }
+.vs-chroma{ background:var(--green-bg); border:2px solid var(--green-bd); }
+.vs-lbl {
+  font-family: var(--mono); font-size: 13px; letter-spacing: .14em;
+  text-transform: uppercase; font-weight: 700; margin-bottom: 12px;
+}
+.vs-trad .vs-lbl   { color: var(--red);   }
+.vs-chroma .vs-lbl { color: var(--green); }
+.vs-desc { font-size: 17px; color: var(--muted); line-height: 1.7; }
+
+/* ── CHROMADB ── */
+.ch-hdr  { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; }
+.ch-icon { font-size: 28px; }
+.ch-title{ font-size: 22px; font-weight: 800; color: var(--text); }
+.ch-sub  { font-size: 17px; color: var(--muted); margin-bottom: 24px; }
+
+table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+tr    { border-bottom: 2px solid var(--border); }
+td    { padding: 16px 14px; font-size: 18px; vertical-align: top; }
+td:first-child {
+  font-family: var(--mono); font-size: 15px;
+  color: var(--purple); width: 140px; font-weight: 700;
+  padding-right: 20px; white-space: nowrap;
+}
+td:last-child { color: var(--muted); }
+
+.session-box {
+  background: var(--surface2); border: 2px solid var(--border2);
+  border-radius: 12px; padding: 22px 20px;
+}
+.session-lbl {
+  font-family: var(--mono); font-size: 12px; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--dim);
+  margin-bottom: 14px; font-weight: 700;
+}
+.session-txt { font-size: 17px; color: var(--muted); line-height: 1.75; }
+.session-txt code {
+  font-family: var(--mono); font-size: 15px; color: var(--orange);
+  background: var(--orange-bg); border: 1.5px solid var(--orange-bd);
+  border-radius: 5px; padding: 2px 6px;
+}
+
+/* ── FOOTER ── */
+footer {
+  border-top: 2px solid var(--border); padding-top: 30px; margin-top: 68px;
+  display: flex; align-items: center;
+  justify-content: space-between; flex-wrap: wrap; gap: 20px;
+}
+.footer-l { font-size: 18px; color: var(--muted); display: flex; align-items: center; gap: 7px; }
+.heart    { color: var(--red); }
+.footer-r { display: flex; gap: 12px; flex-wrap: wrap; }
+.ftag {
+  font-family: var(--mono); font-size: 14px;
+  background: var(--surface); border: 2px solid var(--border2);
+  border-radius: 7px; padding: 7px 16px; color: var(--muted); font-weight: 500;
+}
+
+/* code global fallback */
+code {
+  font-family: var(--mono); font-size: 15px; color: var(--blue);
+  background: var(--blue-bg); border: 1.5px solid var(--blue-bd);
+  border-radius: 5px; padding: 2px 6px;
+}
+
+@media(max-width:1100px){
+  body { padding:36px 28px; }
+  h1   { font-size:48px; }
+  .pipeline,.two-col,.mem-grid,.wf-grid,.server-grid,.vs-grid { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<div class="eyebrow">AI LEARNING HUB — COMPLETE WORKFLOW &amp; ARCHITECTURE</div>
+
+<div class="hero">
+  <div class="hero-left">
+    <h1>AI Workflow<br>Architecture</h1>
+    <p class="hero-sub">RAG <span>·</span> Conversational Memory <span>·</span> LangChain <span>·</span> ChromaDB <span>·</span> Mistral AI</p>
+  </div>
+  <div class="hero-right">
+    <div class="version-badge">v2.0 — BROTHERHOOD Memory Integration</div>
+    <div class="stack-pills">
+      <div class="pill"><div class="dot" style="background:#1d4ed8"></div>Node.js :3000</div>
+      <div class="pill"><div class="dot" style="background:#c2410c"></div>Python Flask :8000</div>
+      <div class="pill"><div class="dot" style="background:#15803d"></div>ChromaDB</div>
+      <div class="pill"><div class="dot" style="background:#6d28d9"></div>OpenRouter / Mistral</div>
+      <div class="pill"><div class="dot" style="background:#b91c1c"></div>LangChain</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CORE RAG PIPELINE ══ -->
+<section>
+  <div class="sec-label">CORE RAG PIPELINE — EVERY REQUEST</div>
+  <div class="pipeline">
+
+    <div class="pipe-card">
+      <span class="pipe-badge b-in">INPUT</span>
+      <span class="pipe-icon">🖥️</span>
+      <div class="pipe-title">User Prompt</div>
+      <div class="pipe-desc">User submits prompt via chat or feature button. Frontend sends <code>POST /ask</code> with taskType, prompt, userId, apiKey.</div>
+    </div>
+
+    <div class="pipe-card">
+      <span class="pipe-badge b-ret">RETRIEVAL</span>
+      <span class="pipe-icon">🔍</span>
+      <div class="pipe-title">Vector Search</div>
+      <div class="pipe-desc">Node server calls ChromaDB <code>/memory/get</code>. Cosine similarity search returns top 3 semantically relevant past memories.</div>
+    </div>
+
+    <div class="pipe-card">
+      <span class="pipe-badge b-aug">AUGMENT</span>
+      <span class="pipe-icon">🧩</span>
+      <div class="pipe-title">Prompt Build</div>
+      <div class="pipe-desc">LangChain assembles message array: System Persona + Retrieved Memories (context) + Current User Prompt. Passed to ChatPromptTemplate.</div>
+    </div>
+
+    <div class="pipe-card">
+      <span class="pipe-badge b-inf">INFERENCE</span>
+      <span class="pipe-icon">🤖</span>
+      <div class="pipe-title">Mistral LLM</div>
+      <div class="pipe-desc">Augmented prompt sent to Mistral Small 3.1 24B via OpenRouter API. Model generates contextual, grounded response.</div>
+    </div>
+
+    <div class="pipe-card">
+      <span class="pipe-badge b-mem">MEMORY</span>
+      <span class="pipe-icon">💾</span>
+      <div class="pipe-title">Save to ChromaDB</div>
+      <div class="pipe-desc">Prompt + Response concatenated and stored as new vector embedding in user's collection. Enriches future context retrieval automatically.</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══ SYSTEM ARCH + FEATURE WORKFLOWS ══ -->
+<div class="two-col">
+
+  <section>
+    <div class="sec-label">SYSTEM ARCHITECTURE</div>
+    <div class="arch-col">
+
+      <div class="arch-card">
+        <div class="arch-hdr">
+          <div class="arch-icon">🖥️</div>
+          <div>
+            <div class="arch-title">Browser Frontend</div>
+            <div class="arch-sub">index.html · Vanilla JS · YouTube IFrame API</div>
+          </div>
+        </div>
+        <div class="tag-row">
+          <span class="tag bl">sendChatMessage()</span>
+          <span class="tag bl">analyzeVideo()</span>
+          <span class="tag bl">analyzeNotes()</span>
+          <span class="tag bl">generateQuiz()</span>
+          <span class="tag">LocalStorage session ID</span>
+          <span class="tag">Caption extraction</span>
+        </div>
+        <div class="http-line"><span class="m">HTTP POST</span>&nbsp;/ask · { taskType, prompt, userId, apiKey }</div>
+      </div>
+
+      <div class="arch-card">
+        <div class="arch-hdr">
+          <div class="arch-icon">⚙️</div>
+          <div>
+            <div class="arch-title">Node.js AI Server</div>
+            <div class="arch-sub">Express · Port 3000 · index.js + agent.js</div>
+          </div>
+        </div>
+        <div class="tag-row">
+          <span class="tag gr">routePrompt()</span>
+          <span class="tag gr">getLLM()</span>
+          <span class="tag gr">ChatOpenAI</span>
+          <span class="tag gr">LangChain pipeline</span>
+          <span class="tag bl">getMemory() → ChromaDB</span>
+          <span class="tag bl">saveMemory() → ChromaDB</span>
+        </div>
+        <div class="server-grid">
+          <div class="server-card">
+            <div class="server-hdr">
+              <div class="server-icon">🐍</div>
+              <div>
+                <div class="server-name">Python Memory Server</div>
+                <div class="server-sub">Flask · Port 8000 · chroma_api.py</div>
+              </div>
+            </div>
+            <div class="server-meta">
+              <span>POST /memory/save</span>
+              <span>POST /memory/get</span>
+              <span>ChromaPersistentClient</span>
+              <span>UUID v4 doc IDs</span>
+            </div>
+          </div>
+          <div class="server-card">
+            <div class="server-hdr">
+              <div class="server-icon">🌐</div>
+              <div>
+                <div class="server-name">OpenRouter · Mistral</div>
+                <div class="server-sub">mistral-small-3.1-24b-instruct:free</div>
+              </div>
+            </div>
+            <div class="server-meta">
+              <span>20 req/min · 200 req/day</span>
+              <span>Bearer token auth</span>
+              <span>temp: 0.7</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-label">FEATURE WORKFLOWS</div>
+    <div class="wf-grid">
+
+      <!-- 1 Summarize Video -->
+      <div class="wf-card">
+        <div class="wf-hdr">
+          <div class="wf-num n1">1</div>
+          <div>
+            <div class="wf-title">▶ Summarize Video</div>
+            <div class="wf-sub">Caption extraction → AI summary</div>
+          </div>
+        </div>
+        <div class="steps">
+          <div class="step"><div class="snum">1</div><div><div class="slabel">FRONTEND</div><div class="stext">User clicks button → <code>analyzeVideo()</code> called. Hooks into YouTube IFrame API for captions.</div></div></div>
+          <div class="step"><div class="snum">2</div><div><div class="slabel">FALLBACK</div><div class="stext">No captions? Falls back to Watch History URLs from LocalStorage.</div></div></div>
+          <div class="step"><div class="snum">3</div><div><div class="slabel">TRUNCATION</div><div class="stext">Caption text capped at <span class="ho">3,000 chars</span> to prevent context window overflow.</div></div></div>
+          <div class="step"><div class="snum">4</div><div><div class="slabel">MEMORY</div><div class="stext">ChromaDB injects past relevant memories. Prompt sent to Mistral.</div></div></div>
+          <div class="step"><div class="snum">5</div><div><div class="slabel">RESPONSE</div><div class="stext">AI returns structured bullet summary. Saved to ChromaDB for future context.</div></div></div>
+        </div>
+      </div>
+
+      <!-- 2 Follow-up Chat -->
+      <div class="wf-card">
+        <div class="wf-hdr">
+          <div class="wf-num n2">2</div>
+          <div>
+            <div class="wf-title">💬 Follow-up Chat</div>
+            <div class="wf-sub">Episodic memory loop</div>
+          </div>
+        </div>
+        <div class="steps">
+          <div class="step"><div class="snum">1</div><div><div class="slabel">INPUT</div><div class="stext">User types vague follow-up: "explain the second point more"</div></div></div>
+          <div class="step"><div class="snum">2</div><div><div class="slabel">VECTOR SEARCH</div><div class="stext">ChromaDB vectorizes the phrase, finds cosine-similar past interactions.</div></div></div>
+          <div class="step"><div class="snum">3</div><div><div class="slabel">INJECT</div><div class="stext">Previous summary returned as context. Mistral receives vague prompt + full prior context.</div></div></div>
+          <div class="step"><div class="snum">4</div><div><div class="slabel">INFERENCE</div><div class="stext">Model infers "second point" = Question 2 of the previous response. Seamless continuation.</div></div></div>
+          <div class="step"><div class="snum">5</div><div><div class="slabel">SAVE</div><div class="stext">This Q&amp;A pair saved → richer context over time, building episodic memory.</div></div></div>
+        </div>
+      </div>
+
+      <!-- 3 Refine Notes -->
+      <div class="wf-card">
+        <div class="wf-hdr">
+          <div class="wf-num n3">3</div>
+          <div>
+            <div class="wf-title">📋 Refine Notes</div>
+            <div class="wf-sub">Notes → structured study guide</div>
+          </div>
+        </div>
+        <div class="steps">
+          <div class="step"><div class="snum">1</div><div><div class="slabel">COLLECTION</div><div class="stext">Scrapes <code>cleanViewerNotes()</code> from LocalStorage. Joins with <code>\n</code> formatting.</div></div></div>
+          <div class="step"><div class="snum">2</div><div><div class="slabel">VALIDATE</div><div class="stext">If array length = 0, halts and alerts user. No empty API calls.</div></div></div>
+          <div class="step"><div class="snum">3</div><div><div class="slabel">PROMPT</div><div class="stext">AI instructed to: group concepts, fix errors, structure beautifully, add 2 study tips.</div></div></div>
+          <div class="step"><div class="snum">4</div><div><div class="slabel">OUTPUT</div><div class="stext">Mistral returns polished, corrected study guide with appended further study recommendations.</div></div></div>
+        </div>
+      </div>
+
+      <!-- 4 Auto Quiz -->
+      <div class="wf-card">
+        <div class="wf-hdr">
+          <div class="wf-num n4">4</div>
+          <div>
+            <div class="wf-title">🚗 Auto Quiz</div>
+            <div class="wf-sub">Notes + memory → MCQ quiz</div>
+          </div>
+        </div>
+        <div class="steps">
+          <div class="step"><div class="snum">1</div><div><div class="slabel">SOURCE</div><div class="stext">Pulls latest notes from LocalStorage. Truncated to <span class="hp">2,000 chars</span> for focused reasoning.</div></div></div>
+          <div class="step"><div class="snum">2</div><div><div class="slabel">RAG BOOST</div><div class="stext">ChromaDB auto-injects video summaries. Quiz integrates notes + watched content.</div></div></div>
+          <div class="step"><div class="snum">3</div><div><div class="slabel">CONSTRAINTS</div><div class="stext">Model must: A/B/C/D format, only use provided context, obscure answers until bottom.</div></div></div>
+          <div class="step"><div class="snum">4</div><div><div class="slabel">OUTPUT</div><div class="stext">3 MCQ questions generated. Saved to memory for follow-up "explain Q2" continuity.</div></div></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</div>
+
+<!-- ══ MEMORY ARCHITECTURE ══ -->
+<section>
+  <div class="sec-label">MEMORY ARCHITECTURE — CHROMADB VECTOR STORE</div>
+  <div class="mem-grid">
+
+    <div class="mem-card">
+      <div class="mem-title">Memory Accumulation Over Time</div>
+
+      <div class="mem-item">
+        <span class="midx i1">INT 1</span>
+        User asks about Python → <span class="hl-g">&nbsp;Saved as vector to ChromaDB</span>
+      </div>
+      <div class="mem-item">
+        <span class="midx i2">INT 2</span>
+        User asks about loops → ChromaDB returns Python context → <span class="hl-b">&nbsp;Answer references Python + loops</span>
+      </div>
+      <div class="mem-item">
+        <span class="midx i3">INT 3</span>
+        User asks "give me a quiz" → ChromaDB returns Python + loops → <span class="hl-p">&nbsp;Quiz auto-targets Python loops!</span>
+      </div>
+
+      <div class="vs-title">Why Vector DB vs Traditional DB</div>
+      <div class="vs-grid">
+        <div class="vs-box vs-trad">
+          <div class="vs-lbl">TRADITIONAL DB</div>
+          <div class="vs-desc">Exact keyword match only. Query "loops" finds only docs containing "loops". No semantic understanding.</div>
+        </div>
+        <div class="vs-box vs-chroma">
+          <div class="vs-lbl">CHROMADB VECTORS</div>
+          <div class="vs-desc">Semantic similarity search. "Loops" finds iteration, for/while, repetition. Ranked by meaning proximity.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mem-card">
+      <div class="ch-hdr">
+        <div class="ch-icon">📦</div>
+        <div class="ch-title">ChromaDB — PersistentClient</div>
+      </div>
+      <div class="ch-sub">/chroma_db · Data survives server restarts · Per-user isolation</div>
+
+      <table>
+        <tr><td>Collection</td><td>memory_{userId} — unique per browser session</td></tr>
+        <tr><td>Documents</td><td>Concatenated prompt + " " + response strings</td></tr>
+        <tr><td>Embeddings</td><td>Auto-generated by ChromaDB default embedding function</td></tr>
+        <tr><td>IDs</td><td>UUID v4 — unique per stored interaction</td></tr>
+        <tr><td>Retrieval</td><td>Top 3 cosine-similar results per query</td></tr>
+        <tr><td>Metadata</td><td>{ user_id: "user_..." } for isolation</td></tr>
+      </table>
+
+      <div class="session-box">
+        <div class="session-lbl">SESSION ID FLOW</div>
+        <div class="session-txt">
+          Generated once on first visit as <code>user_ + timestamp</code>. Stored in localStorage. Sent as userId on every request. Ensures isolated ChromaDB collection per browser session.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══ FOOTER ══ -->
+<footer>
+  <div class="footer-l">Built with <span class="heart">♥</span>&nbsp; AI Learning Hub &nbsp;·&nbsp; AdReduce &nbsp;·&nbsp; March 25, 2026</div>
+  <div class="footer-r">
+    <span class="ftag">LangChain 0.0.165</span>
+    <span class="ftag">Mistral Small 3.1 24B</span>
+    <span class="ftag">ChromaDB</span>
+    <span class="ftag">OpenRouter</span>
+    <span class="ftag">Express 5.1.0</span>
+    <span class="ftag">Flask · Python 3.13</span>
+  </div>
+</footer>
+
+</body>
+</html>
