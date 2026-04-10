@@ -4,633 +4,690 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AI Workflow Architecture</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=EB+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --gold: #C9A84C;
+    --gold-light: #E8C97A;
+    --gold-dim: rgba(201,168,76,0.5);
+    --gold-faint: rgba(201,168,76,0.12);
+    --bg: #0B0900;
+    --bg-card: #120E03;
+    --bg-card2: #0E0B02;
+    --border: rgba(201,168,76,0.28);
+    --border-hi: rgba(201,168,76,0.65);
+    --white: #FFFFFF;
+    --off-white: #EEE4C8;
+    --dim: #B8A070;
+    --code-bg: #080600;
+  }
 
-:root {
-  --bg:        #f0f3fb;
-  --surface:   #ffffff;
-  --surface2:  #f5f7fd;
-  --border:    #d4dbef;
-  --border2:   #b8c4e0;
-  --text:      #111827;
-  --muted:     #374151;
-  --dim:       #6b7280;
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-  --blue:      #1d4ed8;
-  --blue-bg:   #eff6ff;
-  --blue-bd:   #93c5fd;
+  html { scroll-behavior: smooth; }
 
-  --green:     #15803d;
-  --green-bg:  #f0fdf4;
-  --green-bd:  #6ee7b7;
+  body {
+    background: var(--bg);
+    color: var(--white);
+    font-family: 'EB Garamond', serif;
+    font-size: 18px;
+    line-height: 1.7;
+    background-image:
+      radial-gradient(ellipse 80% 40% at 50% 0%, rgba(201,168,76,0.07) 0%, transparent 70%),
+      repeating-linear-gradient(0deg, transparent, transparent 60px, rgba(201,168,76,0.018) 60px, rgba(201,168,76,0.018) 61px),
+      repeating-linear-gradient(90deg, transparent, transparent 60px, rgba(201,168,76,0.018) 60px, rgba(201,168,76,0.018) 61px);
+  }
 
-  --orange:    #c2410c;
-  --orange-bg: #fff7ed;
-  --orange-bd: #fdba74;
+  /* ─── PAGE WRAP ─── */
+  .page { max-width: 1120px; margin: 0 auto; padding: 56px 28px 80px; }
 
-  --purple:    #6d28d9;
-  --purple-bg: #f5f3ff;
-  --purple-bd: #c4b5fd;
+  /* ─── DECORATIVE DIVIDERS ─── */
+  .hr {
+    display: flex; align-items: center; gap: 14px;
+    margin: 40px 0;
+  }
+  .hr::before, .hr::after {
+    content: ''; flex: 1; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+  .hr-diamond {
+    width: 9px; height: 9px;
+    background: var(--gold); transform: rotate(45deg); flex-shrink: 0;
+  }
+  .hr-sm { margin: 24px 0; }
+  .hr-sm::before, .hr-sm::after { opacity: 0.4; }
 
-  --yellow:    #92400e;
-  --yellow-bg: #fffbeb;
-  --yellow-bd: #fcd34d;
+  /* ─── SECTION LABEL ─── */
+  .sec-label {
+    font-family: 'Cinzel', serif;
+    font-size: 11px; letter-spacing: 5px; color: var(--gold);
+    text-transform: uppercase; text-align: center;
+    display: flex; align-items: center; justify-content: center; gap: 14px;
+    margin-bottom: 32px;
+  }
+  .sec-label::before, .sec-label::after {
+    content: ''; width: 50px; height: 1px;
+    background: var(--border-hi);
+  }
 
-  --red:       #b91c1c;
-  --red-bg:    #fef2f2;
-  --red-bd:    #fca5a5;
+  /* ─── CARDS ─── */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 28px 30px;
+    position: relative;
+  }
+  .card::before {
+    content: ''; position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+  .card-title {
+    font-family: 'Cinzel', serif;
+    font-size: 14px; letter-spacing: 3px; color: var(--gold);
+    text-transform: uppercase; margin-bottom: 14px;
+  }
 
-  --mono: 'JetBrains Mono', monospace;
-  --sans: 'Syne', sans-serif;
-}
+  /* ─── HEADER ─── */
+  .header { text-align: center; margin-bottom: 48px; }
+  .header-eyebrow {
+    font-family: 'Cinzel', serif;
+    font-size: 11px; letter-spacing: 7px; color: var(--gold);
+    text-transform: uppercase; margin-bottom: 18px;
+  }
+  .header h1 {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(34px, 6vw, 68px);
+    font-weight: 900; line-height: 1.08;
+    color: var(--white);
+    text-shadow: 0 0 60px rgba(201,168,76,0.25), 0 2px 0 rgba(0,0,0,0.8);
+    letter-spacing: 3px; margin-bottom: 8px;
+  }
+  .header h1 em {
+    font-style: normal;
+    color: var(--gold-light);
+  }
+  .header-sub {
+    font-size: 22px; color: var(--off-white);
+    letter-spacing: 1px; margin-bottom: 22px;
+    font-style: italic;
+  }
+  .badges {
+    display: flex; flex-wrap: wrap;
+    justify-content: center; gap: 10px; margin-top: 6px;
+  }
+  .badge {
+    padding: 5px 18px;
+    border: 1px solid var(--border-hi);
+    background: var(--gold-faint);
+    color: var(--gold-light);
+    font-family: 'Source Code Pro', monospace;
+    font-size: 12px; letter-spacing: 2px; border-radius: 2px;
+  }
 
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--sans);
-  font-size: 20px;
-  line-height: 1.7;
-  padding: 60px 72px;
-  max-width: 1500px;
-  margin: 0 auto;
-}
+  /* ─── TOP 2-COL ─── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media(max-width:700px){ .two-col { grid-template-columns:1fr; } }
 
-/* ── EYEBROW ── */
-.eyebrow {
-  font-family: var(--mono);
-  font-size: 14px;
-  letter-spacing: .22em;
-  color: var(--green);
-  text-transform: uppercase;
-  margin-bottom: 20px;
-  display: flex; align-items: center; gap: 10px;
-}
-.eyebrow::before { content:'●'; font-size:10px; }
+  .constraint-list { list-style: none; margin-top: 12px; }
+  .constraint-list li {
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: 18px; color: var(--off-white);
+    padding: 6px 0; border-bottom: 1px solid rgba(201,168,76,0.1);
+  }
+  .constraint-list li:last-child { border: none; }
+  .c-num {
+    width: 24px; height: 24px; flex-shrink: 0;
+    border: 1px solid var(--gold); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Cinzel', serif; font-size: 11px; color: var(--gold);
+    margin-top: 2px;
+  }
 
-/* ── HERO ── */
-.hero {
-  display: flex; align-items: flex-start;
-  justify-content: space-between; flex-wrap: wrap;
-  gap: 28px; margin-bottom: 56px;
-}
-h1 {
-  font-size: 68px; font-weight: 800;
-  line-height: 1.05; color: var(--text);
-  letter-spacing: -.025em; margin-bottom: 16px;
-}
-.hero-sub { font-size: 22px; color: var(--muted); letter-spacing: .02em; }
-.hero-sub span { margin: 0 8px; color: var(--dim); }
+  /* ─── RAG PIPELINE ─── */
+  .pipeline {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    position: relative; margin-bottom: 16px;
+  }
+  @media(max-width:900px){ .pipeline { grid-template-columns: 1fr 1fr 1fr; } }
+  @media(max-width:580px){ .pipeline { grid-template-columns: 1fr 1fr; } }
+  @media(max-width:380px){ .pipeline { grid-template-columns: 1fr; } }
 
-.hero-right { display: flex; flex-direction: column; align-items: flex-end; gap: 16px; }
-.version-badge {
-  display: inline-flex; align-items: center; gap: 9px;
-  background: var(--purple-bg); border: 2px solid var(--purple-bd);
-  border-radius: 9px; padding: 10px 22px;
-  font-family: var(--mono); font-size: 16px;
-  color: var(--purple); font-weight: 700;
-}
-.stack-pills { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
-.pill {
-  display: flex; align-items: center; gap: 9px;
-  background: var(--surface); border: 2px solid var(--border2);
-  border-radius: 26px; padding: 9px 20px;
-  font-size: 17px; font-weight: 600; color: var(--text);
-  box-shadow: 0 2px 6px rgba(0,0,0,.07);
-}
-.dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .pipe-step {
+    background: var(--bg-card2);
+    border: 1px solid var(--border);
+    border-right: none;
+    padding: 22px 14px 22px;
+    position: relative; text-align: center;
+  }
+  .pipe-step:last-child { border-right: 1px solid var(--border); }
+  .pipe-step::before {
+    content: ''; position: absolute;
+    top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, #8B6914, var(--gold-light));
+  }
+  .pipe-arrow {
+    position: absolute; right: -18px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--gold); font-size: 22px; z-index: 3;
+    pointer-events: none;
+  }
+  @media(max-width:900px){ .pipe-arrow { display: none; } }
+  .pipe-icon { font-size: 32px; display: block; margin-bottom: 8px; }
+  .pipe-tag {
+    font-family: 'Cinzel', serif; font-size: 10px;
+    letter-spacing: 3px; color: var(--gold-dim); margin-bottom: 5px;
+  }
+  .pipe-name {
+    font-family: 'Cinzel', serif; font-size: 14px; font-weight: 700;
+    color: var(--gold-light); margin-bottom: 9px; letter-spacing: 1px;
+  }
+  .pipe-desc { font-size: 15px; color: var(--off-white); line-height: 1.55; }
 
-/* ── SECTION LABEL ── */
-.sec-label {
-  font-family: var(--mono); font-size: 13px;
-  letter-spacing: .2em; color: var(--dim);
-  text-transform: uppercase; margin-bottom: 26px;
-  display: flex; align-items: center; gap: 14px;
-}
-.sec-label::after { content:''; flex:1; height:2px; background:var(--border); }
-section { margin-bottom: 68px; }
+  /* ─── ARCH NODES ─── */
+  .arch-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+  }
+  @media(max-width:800px){ .arch-grid { grid-template-columns: 1fr 1fr; } }
+  @media(max-width:480px){ .arch-grid { grid-template-columns: 1fr; } }
 
-/* ── PIPELINE ── */
-.pipeline {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 18px;
-}
-.pipe-card {
-  background: var(--surface);
-  border: 2px solid var(--border2);
-  border-radius: 16px;
-  padding: 32px 24px;
-  box-shadow: 0 3px 14px rgba(0,0,0,.07);
-}
-.pipe-badge {
-  display: inline-block;
-  font-family: var(--mono);
-  font-size: 13px; letter-spacing: .1em;
-  text-transform: uppercase; font-weight: 700;
-  padding: 6px 13px; border-radius: 7px; margin-bottom: 16px;
-}
-.b-in   { background:var(--blue-bg);   color:var(--blue);   border:2px solid var(--blue-bd); }
-.b-ret  { background:var(--green-bg);  color:var(--green);  border:2px solid var(--green-bd); }
-.b-aug  { background:var(--orange-bg); color:var(--orange); border:2px solid var(--orange-bd); }
-.b-inf  { background:var(--purple-bg); color:var(--purple); border:2px solid var(--purple-bd); }
-.b-mem  { background:var(--yellow-bg); color:var(--yellow); border:2px solid var(--yellow-bd); }
+  .arch-node {
+    background: var(--bg-card);
+    border: 1px solid var(--border); padding: 20px 16px;
+    text-align: center; position: relative;
+  }
+  .arch-node::after {
+    content: ''; position: absolute;
+    bottom: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(201,168,76,0.4), transparent);
+  }
+  .arch-icon { font-size: 30px; display: block; margin-bottom: 8px; }
+  .arch-name {
+    font-family: 'Cinzel', serif; font-size: 13px; font-weight: 700;
+    color: var(--white); margin-bottom: 5px; letter-spacing: 1px;
+  }
+  .arch-sub {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 11px; color: var(--gold); margin-bottom: 10px;
+  }
+  .arch-items { list-style: none; text-align: left; }
+  .arch-items li {
+    font-size: 13px; color: var(--dim); line-height: 1.7;
+    padding-left: 13px; position: relative;
+  }
+  .arch-items li::before { content: '·'; position: absolute; left: 0; color: var(--gold); }
 
-.pipe-icon  { font-size: 34px; margin-bottom: 14px; display: block; }
-.pipe-title { font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 12px; }
-.pipe-desc  { font-size: 17px; color: var(--muted); line-height: 1.7; }
+  /* ─── FEATURES ─── */
+  .features-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media(max-width:700px){ .features-grid { grid-template-columns: 1fr; } }
 
-/* ── TWO COL ── */
-.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+  .feat {
+    background: var(--bg-card2); border: 1px solid var(--border); padding: 26px;
+    position: relative;
+  }
+  .feat::before {
+    content: ''; position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--gold), transparent);
+  }
+  .feat-head {
+    display: flex; align-items: center; gap: 14px; margin-bottom: 20px;
+  }
+  .feat-num {
+    width: 36px; height: 36px; flex-shrink: 0;
+    border: 2px solid var(--gold);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Cinzel', serif; font-size: 15px;
+    font-weight: 700; color: var(--gold);
+  }
+  .feat-title {
+    font-family: 'Cinzel', serif; font-size: 17px; font-weight: 700;
+    color: var(--white); letter-spacing: 1px;
+  }
+  .feat-emoji { font-size: 20px; }
+  .steps { display: flex; flex-direction: column; gap: 11px; }
+  .step {
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .step-n {
+    width: 24px; height: 24px; flex-shrink: 0;
+    background: rgba(201,168,76,0.1);
+    border: 1px solid var(--border-hi);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Cinzel', serif; font-size: 11px; color: var(--gold);
+  }
+  .step-body { font-size: 17px; color: var(--off-white); line-height: 1.6; }
+  .step-body strong { color: var(--gold-light); font-weight: 600; }
 
-/* ── ARCH ── */
-.arch-col { display: flex; flex-direction: column; gap: 20px; }
-.arch-card {
-  background: var(--surface);
-  border: 2px solid var(--border2);
-  border-radius: 16px;
-  padding: 30px 28px;
-  box-shadow: 0 3px 14px rgba(0,0,0,.07);
-}
-.arch-hdr { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 18px; }
-.arch-icon  { font-size: 30px; flex-shrink: 0; margin-top: 3px; }
-.arch-title { font-size: 22px; font-weight: 800; color: var(--text); }
-.arch-sub   { font-family: var(--mono); font-size: 15px; color: var(--muted); margin-top: 5px; }
+  /* ─── MEMORY TIMELINE ─── */
+  .mem-timeline {
+    display: flex; gap: 0;
+    position: relative; margin-bottom: 28px;
+  }
+  .mem-timeline::before {
+    content: ''; position: absolute;
+    top: 28px; left: 8%; right: 8%; height: 2px;
+    background: linear-gradient(90deg, var(--gold), var(--gold-light), var(--gold));
+    z-index: 0;
+  }
+  .mem-node {
+    flex: 1; text-align: center; position: relative; z-index: 1;
+  }
+  .mem-circle {
+    width: 56px; height: 56px; border-radius: 50%;
+    border: 2px solid var(--gold); background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 12px;
+    font-family: 'Cinzel', serif; font-size: 14px; font-weight: 700; color: var(--gold-light);
+    box-shadow: 0 0 14px rgba(201,168,76,0.25);
+  }
+  .mem-text {
+    font-size: 14px; color: var(--off-white); line-height: 1.5; padding: 0 6px;
+  }
 
-.tag-row { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 16px; }
-.tag {
-  font-family: var(--mono); font-size: 14px;
-  background: var(--surface2); border: 2px solid var(--border2);
-  border-radius: 7px; padding: 6px 13px;
-  color: var(--muted); font-weight: 600;
-}
-.tag.bl { color:var(--blue);   background:var(--blue-bg);   border-color:var(--blue-bd); }
-.tag.gr { color:var(--green);  background:var(--green-bg);  border-color:var(--green-bd); }
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 28px; }
+  @media(max-width:580px){ .compare { grid-template-columns: 1fr; } }
+  .cmp-box { padding: 20px 22px; border: 1px solid; }
+  .cmp-box.bad  { background: rgba(180,40,30,0.07); border-color: rgba(180,40,30,0.35); }
+  .cmp-box.good { background: rgba(35,160,80,0.07); border-color: rgba(35,160,80,0.35); }
+  .cmp-title {
+    font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 3px;
+    text-transform: uppercase; margin-bottom: 10px;
+  }
+  .cmp-box.bad .cmp-title { color: #E05050; }
+  .cmp-box.good .cmp-title { color: #50D080; }
+  .cmp-box p { font-size: 17px; color: var(--off-white); line-height: 1.65; }
 
-.http-line {
-  font-family: var(--mono); font-size: 16px;
-  background: var(--surface2); border: 2px solid var(--border);
-  border-radius: 9px; padding: 13px 20px; margin: 18px 0;
-  color: var(--muted);
-}
-.http-line .m { color: var(--green); font-weight: 700; }
+  /* ─── CHROMA TABLE ─── */
+  .tbl { width: 100%; border-collapse: collapse; font-size: 16px; margin-top: 16px; }
+  .tbl th {
+    font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 3px;
+    color: var(--gold); text-transform: uppercase;
+    padding: 10px 16px; border-bottom: 1px solid var(--border-hi); text-align: left;
+  }
+  .tbl td {
+    padding: 10px 16px; border-bottom: 1px solid rgba(201,168,76,0.1);
+    color: var(--off-white); vertical-align: top;
+  }
+  .tbl td:first-child {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 13px; color: var(--gold-light); white-space: nowrap;
+  }
+  .tbl tr:hover td { background: rgba(201,168,76,0.04); }
 
-.server-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 18px; }
-.server-card {
-  background: var(--surface2);
-  border: 2px solid var(--border2);
-  border-radius: 12px; padding: 20px 18px;
-}
-.server-hdr  { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
-.server-icon { font-size: 24px; }
-.server-name { font-size: 18px; font-weight: 700; color: var(--text); }
-.server-sub  { font-family: var(--mono); font-size: 13px; color: var(--muted); margin-top: 4px; }
-.server-meta { font-size: 16px; color: var(--muted); display: flex; flex-direction: column; gap: 6px; }
+  /* ─── SESSION BOX ─── */
+  .session-box {
+    background: var(--bg-card2); border: 1px solid var(--border);
+    border-left: 4px solid var(--gold);
+    padding: 20px 24px; margin-top: 20px;
+  }
+  .session-box p { font-size: 17px; color: var(--off-white); line-height: 1.7; }
+  .session-box strong { color: var(--gold-light); }
 
-/* ── WORKFLOW ── */
-.wf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.wf-card {
-  background: var(--surface);
-  border: 2px solid var(--border2);
-  border-radius: 16px; padding: 28px 24px;
-  box-shadow: 0 3px 14px rgba(0,0,0,.07);
-}
-.wf-hdr { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 22px; }
-.wf-num {
-  width: 38px; height: 38px; border-radius: 9px;
-  display: flex; align-items: center; justify-content: center;
-  font-family: var(--mono); font-size: 18px; font-weight: 700; flex-shrink: 0;
-}
-.n1 { background:var(--blue-bg);   color:var(--blue);   border:2px solid var(--blue-bd); }
-.n2 { background:var(--green-bg);  color:var(--green);  border:2px solid var(--green-bd); }
-.n3 { background:var(--orange-bg); color:var(--orange); border:2px solid var(--orange-bd); }
-.n4 { background:var(--purple-bg); color:var(--purple); border:2px solid var(--purple-bd); }
+  /* ─── AI PERSPECTIVE ─── */
+  .perspective {
+    background: var(--bg-card); border: 1px solid var(--border-hi);
+    padding: 34px 36px; position: relative; margin-top: 12px;
+  }
+  .perspective::before {
+    content: ''; position: absolute;
+    top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, transparent, var(--gold-light), transparent);
+  }
+  .perspective p {
+    font-size: 21px; color: var(--white); line-height: 1.75;
+    font-style: italic;
+  }
+  .perspective p strong { color: var(--gold-light); font-style: normal; }
 
-.wf-title { font-size: 20px; font-weight: 800; color: var(--text); }
-.wf-sub   { font-size: 16px; color: var(--muted); margin-top: 4px; }
+  /* ─── CODE BLOCK ─── */
+  .code {
+    background: var(--code-bg); border: 1px solid rgba(201,168,76,0.2);
+    border-left: 3px solid var(--gold);
+    padding: 16px 20px; margin-top: 16px; border-radius: 2px;
+    font-family: 'Source Code Pro', monospace;
+    font-size: 13px; line-height: 1.8; color: #90A870;
+  }
+  .code .k { color: var(--gold); }
+  .code .s { color: #7EC8A0; }
+  .code .c { color: #485030; font-style: italic; }
+  .code .f { color: #C8A84C; }
 
-.steps { display: flex; flex-direction: column; gap: 16px; }
-.step  { display: flex; gap: 14px; align-items: flex-start; }
-.snum {
-  width: 30px; height: 30px; border-radius: 50%;
-  background: var(--surface2); border: 2px solid var(--border2);
-  display: flex; align-items: center; justify-content: center;
-  font-family: var(--mono); font-size: 14px;
-  color: var(--muted); flex-shrink: 0; margin-top: 3px; font-weight: 700;
-}
-.slabel {
-  font-family: var(--mono); font-size: 12px; letter-spacing: .14em;
-  text-transform: uppercase; color: var(--dim);
-  margin-bottom: 5px; font-weight: 700;
-}
-.stext { font-size: 17px; color: var(--muted); line-height: 1.65; }
-.stext code {
-  font-family: var(--mono); font-size: 15px; color: var(--blue);
-  background: var(--blue-bg); border: 1.5px solid var(--blue-bd);
-  border-radius: 5px; padding: 2px 6px;
-}
-.hg { color: var(--green);  font-weight: 700; }
-.ho { color: var(--orange); font-weight: 700; }
-.hp { color: var(--purple); font-weight: 700; }
+  /* ─── FOOTER ─── */
+  .footer {
+    text-align: center; margin-top: 60px;
+    border: 1px solid var(--border); background: var(--bg-card);
+    padding: 36px 28px; position: relative;
+  }
+  .footer::before {
+    content: ''; position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+  .footer-names {
+    font-family: 'Cinzel', serif;
+    font-size: 17px; font-weight: 700; color: var(--white);
+    letter-spacing: 2px; line-height: 2.1; margin-bottom: 14px;
+  }
+  .footer-names .id {
+    color: var(--gold); font-size: 13px; font-weight: 400;
+    font-family: 'Source Code Pro', monospace; letter-spacing: 1px;
+  }
+  .footer-stack {
+    display: flex; justify-content: center; flex-wrap: wrap; gap: 20px;
+    margin-top: 10px;
+  }
+  .footer-stack span {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 12px; color: var(--dim); letter-spacing: 1px;
+  }
 
-/* ── MEMORY SECTION ── */
-.mem-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
-.mem-card {
-  background: var(--surface);
-  border: 2px solid var(--border2);
-  border-radius: 16px; padding: 32px 28px;
-  box-shadow: 0 3px 14px rgba(0,0,0,.07);
-}
-.mem-title { font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 24px; }
-
-.mem-item {
-  display: flex; align-items: flex-start; gap: 16px;
-  padding: 18px 20px; margin-bottom: 14px;
-  background: var(--surface2); border: 2px solid var(--border);
-  border-radius: 12px; font-size: 18px; color: var(--muted); line-height: 1.65;
-}
-.midx {
-  font-family: var(--mono); font-size: 13px; font-weight: 700;
-  padding: 4px 9px; border-radius: 7px;
-  flex-shrink: 0; margin-top: 3px; white-space: nowrap;
-}
-.i1 { background:var(--blue-bg);   color:var(--blue);   border:2px solid var(--blue-bd); }
-.i2 { background:var(--green-bg);  color:var(--green);  border:2px solid var(--green-bd); }
-.i3 { background:var(--purple-bg); color:var(--purple); border:2px solid var(--purple-bd); }
-
-.hl-g { color:var(--green);  font-weight: 700; }
-.hl-b { color:var(--blue);   font-weight: 700; }
-.hl-p { color:var(--purple); font-weight: 700; }
-
-.vs-title { font-size: 21px; font-weight: 800; color: var(--text); margin: 28px 0 18px; }
-.vs-grid  { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.vs-box   { border-radius: 12px; padding: 20px 18px; }
-.vs-trad  { background:var(--red-bg);   border:2px solid var(--red-bd); }
-.vs-chroma{ background:var(--green-bg); border:2px solid var(--green-bd); }
-.vs-lbl {
-  font-family: var(--mono); font-size: 13px; letter-spacing: .14em;
-  text-transform: uppercase; font-weight: 700; margin-bottom: 12px;
-}
-.vs-trad .vs-lbl   { color: var(--red);   }
-.vs-chroma .vs-lbl { color: var(--green); }
-.vs-desc { font-size: 17px; color: var(--muted); line-height: 1.7; }
-
-/* ── CHROMADB ── */
-.ch-hdr  { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; }
-.ch-icon { font-size: 28px; }
-.ch-title{ font-size: 22px; font-weight: 800; color: var(--text); }
-.ch-sub  { font-size: 17px; color: var(--muted); margin-bottom: 24px; }
-
-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
-tr    { border-bottom: 2px solid var(--border); }
-td    { padding: 16px 14px; font-size: 18px; vertical-align: top; }
-td:first-child {
-  font-family: var(--mono); font-size: 15px;
-  color: var(--purple); width: 140px; font-weight: 700;
-  padding-right: 20px; white-space: nowrap;
-}
-td:last-child { color: var(--muted); }
-
-.session-box {
-  background: var(--surface2); border: 2px solid var(--border2);
-  border-radius: 12px; padding: 22px 20px;
-}
-.session-lbl {
-  font-family: var(--mono); font-size: 12px; letter-spacing: .16em;
-  text-transform: uppercase; color: var(--dim);
-  margin-bottom: 14px; font-weight: 700;
-}
-.session-txt { font-size: 17px; color: var(--muted); line-height: 1.75; }
-.session-txt code {
-  font-family: var(--mono); font-size: 15px; color: var(--orange);
-  background: var(--orange-bg); border: 1.5px solid var(--orange-bd);
-  border-radius: 5px; padding: 2px 6px;
-}
-
-/* ── FOOTER ── */
-footer {
-  border-top: 2px solid var(--border); padding-top: 30px; margin-top: 68px;
-  display: flex; align-items: center;
-  justify-content: space-between; flex-wrap: wrap; gap: 20px;
-}
-.footer-l { font-size: 18px; color: var(--muted); display: flex; align-items: center; gap: 7px; }
-.heart    { color: var(--red); }
-.footer-r { display: flex; gap: 12px; flex-wrap: wrap; }
-.ftag {
-  font-family: var(--mono); font-size: 14px;
-  background: var(--surface); border: 2px solid var(--border2);
-  border-radius: 7px; padding: 7px 16px; color: var(--muted); font-weight: 500;
-}
-
-/* code global fallback */
-code {
-  font-family: var(--mono); font-size: 15px; color: var(--blue);
-  background: var(--blue-bg); border: 1.5px solid var(--blue-bd);
-  border-radius: 5px; padding: 2px 6px;
-}
-
-@media(max-width:1100px){
-  body { padding:36px 28px; }
-  h1   { font-size:48px; }
-  .pipeline,.two-col,.mem-grid,.wf-grid,.server-grid,.vs-grid { grid-template-columns:1fr; }
-}
+  /* ─── UTIL ─── */
+  .mt8 { margin-top: 8px; }
+  .mt16 { margin-top: 16px; }
+  .mt24 { margin-top: 24px; }
+  .body-text { font-size: 18px; color: var(--off-white); line-height: 1.75; }
+  .gold-text { color: var(--gold-light); }
+  .big-text { font-size: 20px; }
 </style>
 </head>
 <body>
+<div class="page">
 
-<!-- ══ HEADER ══ -->
-<div class="eyebrow">AI LEARNING HUB — COMPLETE WORKFLOW &amp; ARCHITECTURE</div>
+  <!-- ══════════ HEADER ══════════ -->
+  <header class="header">
+    <p class="header-eyebrow">AI Learning Hub · Complete Architecture</p>
+    <div class="hr"><div class="hr-diamond"></div></div>
+    <h1>AI <em>Workflow</em><br>Architecture</h1>
+    <p class="header-sub">RAG · Conversational Memory · LangChain · ChromaDB · Mistral AI</p>
+    <div class="badges">
+      <span class="badge">v2.0 — BROTHERHOOD</span>
+      <span class="badge">Node.js :3000</span>
+      <span class="badge">Python Flask :8000</span>
+      <span class="badge">ChromaDB</span>
+      <span class="badge">OpenRouter / Mistral</span>
+      <span class="badge">LangChain</span>
+    </div>
+    <div class="hr" style="margin-top:36px;"><div class="hr-diamond"></div></div>
+  </header>
 
-<div class="hero">
-  <div class="hero-left">
-    <h1>AI Workflow<br>Architecture</h1>
-    <p class="hero-sub">RAG <span>·</span> Conversational Memory <span>·</span> LangChain <span>·</span> ChromaDB <span>·</span> Mistral AI</p>
-  </div>
-  <div class="hero-right">
-    <div class="version-badge">v2.0 — BROTHERHOOD Memory Integration</div>
-    <div class="stack-pills">
-      <div class="pill"><div class="dot" style="background:#1d4ed8"></div>Node.js :3000</div>
-      <div class="pill"><div class="dot" style="background:#c2410c"></div>Python Flask :8000</div>
-      <div class="pill"><div class="dot" style="background:#15803d"></div>ChromaDB</div>
-      <div class="pill"><div class="dot" style="background:#6d28d9"></div>OpenRouter / Mistral</div>
-      <div class="pill"><div class="dot" style="background:#b91c1c"></div>LangChain</div>
+  <!-- ══════════ PROJECT OVERVIEW ══════════ -->
+  <div class="sec-label">Project Overview</div>
+  <div class="two-col" style="margin-bottom:40px;">
+    <div class="card">
+      <p class="card-title">⊕ Project Objective</p>
+      <p class="body-text big-text">
+        An AI-powered learning assistant that <strong class="gold-text">remembers you</strong> — powered by RAG, LangChain, and ChromaDB vector storage. Every interaction enriches the context for the next.
+      </p>
+      <p class="body-text mt16">
+        Summarize YouTube videos, refine notes, generate quizzes, and hold follow-up conversations with full episodic memory.
+      </p>
+    </div>
+    <div class="card">
+      <p class="card-title">■ Constraints &amp; Design Rules</p>
+      <ul class="constraint-list">
+        <li><span class="c-num">①</span>Every request passes through the full RAG pipeline — no shortcuts.</li>
+        <li><span class="c-num">②</span>No two sessions share the same ChromaDB collection — strict user isolation.</li>
+        <li><span class="c-num">③</span>Context windows are capped to prevent overflow — 3 000 chars video, 2 000 chars quiz.</li>
+        <li><span class="c-num">④</span>Prompt + response always saved after inference — memory grows with every turn.</li>
+      </ul>
     </div>
   </div>
-</div>
 
-<!-- ══ CORE RAG PIPELINE ══ -->
-<section>
-  <div class="sec-label">CORE RAG PIPELINE — EVERY REQUEST</div>
+  <!-- ══════════ RAG PIPELINE ══════════ -->
+  <div class="sec-label">Core RAG Pipeline — Every Request</div>
   <div class="pipeline">
-
-    <div class="pipe-card">
-      <span class="pipe-badge b-in">INPUT</span>
+    <div class="pipe-step">
+      <span class="pipe-arrow">→</span>
       <span class="pipe-icon">🖥️</span>
-      <div class="pipe-title">User Prompt</div>
-      <div class="pipe-desc">User submits prompt via chat or feature button. Frontend sends <code>POST /ask</code> with taskType, prompt, userId, apiKey.</div>
+      <p class="pipe-tag">Step 01</p>
+      <p class="pipe-name">INPUT</p>
+      <p class="pipe-desc">User submits prompt via chat or feature button. Frontend sends <code>POST /ask</code> with taskType, prompt, userId, apiKey.</p>
     </div>
-
-    <div class="pipe-card">
-      <span class="pipe-badge b-ret">RETRIEVAL</span>
+    <div class="pipe-step">
+      <span class="pipe-arrow">→</span>
       <span class="pipe-icon">🔍</span>
-      <div class="pipe-title">Vector Search</div>
-      <div class="pipe-desc">Node server calls ChromaDB <code>/memory/get</code>. Cosine similarity search returns top 3 semantically relevant past memories.</div>
+      <p class="pipe-tag">Step 02</p>
+      <p class="pipe-name">RETRIEVAL</p>
+      <p class="pipe-desc">Node server calls ChromaDB <code>/memory/get</code>. Cosine similarity returns top 3 semantically relevant past memories.</p>
     </div>
-
-    <div class="pipe-card">
-      <span class="pipe-badge b-aug">AUGMENT</span>
+    <div class="pipe-step">
+      <span class="pipe-arrow">→</span>
       <span class="pipe-icon">🧩</span>
-      <div class="pipe-title">Prompt Build</div>
-      <div class="pipe-desc">LangChain assembles message array: System Persona + Retrieved Memories (context) + Current User Prompt. Passed to ChatPromptTemplate.</div>
+      <p class="pipe-tag">Step 03</p>
+      <p class="pipe-name">AUGMENT</p>
+      <p class="pipe-desc">LangChain assembles: System Persona + Retrieved Memories + Current Prompt → <code>ChatPromptTemplate</code>.</p>
     </div>
-
-    <div class="pipe-card">
-      <span class="pipe-badge b-inf">INFERENCE</span>
+    <div class="pipe-step">
+      <span class="pipe-arrow">→</span>
       <span class="pipe-icon">🤖</span>
-      <div class="pipe-title">Mistral LLM</div>
-      <div class="pipe-desc">Augmented prompt sent to Mistral Small 3.1 24B via OpenRouter API. Model generates contextual, grounded response.</div>
+      <p class="pipe-tag">Step 04</p>
+      <p class="pipe-name">INFERENCE</p>
+      <p class="pipe-desc">Augmented prompt sent to Mistral Small 3.1 24B via OpenRouter API. Model generates a contextual response.</p>
+    </div>
+    <div class="pipe-step">
+      <span class="pipe-icon">💾</span>
+      <p class="pipe-tag">Step 05</p>
+      <p class="pipe-name">MEMORY</p>
+      <p class="pipe-desc">Prompt + Response stored as a new vector embedding in user's ChromaDB collection. Enriches future retrieval.</p>
+    </div>
+  </div>
+
+  <div class="hr mt24"><div class="hr-diamond"></div></div>
+
+  <!-- ══════════ SYSTEM ARCHITECTURE ══════════ -->
+  <div class="sec-label">System Architecture</div>
+  <div class="arch-grid" style="margin-bottom:40px;">
+    <div class="arch-node">
+      <span class="arch-icon">🖥️</span>
+      <p class="arch-name">Browser Frontend</p>
+      <p class="arch-sub">index.html · Vanilla JS</p>
+      <ul class="arch-items">
+        <li>sendChatMessage()</li>
+        <li>analyzeVideo()</li>
+        <li>analyzeNotes()</li>
+        <li>generateQuiz()</li>
+        <li>LocalStorage session ID</li>
+        <li>YouTube IFrame API</li>
+      </ul>
+    </div>
+    <div class="arch-node">
+      <span class="arch-icon">⚙️</span>
+      <p class="arch-name">Node.js AI Server</p>
+      <p class="arch-sub">Express · Port 3000</p>
+      <ul class="arch-items">
+        <li>routePrompt()</li>
+        <li>getLLM() · ChatOpenAI</li>
+        <li>LangChain pipeline</li>
+        <li>getMemory() → ChromaDB</li>
+        <li>saveMemory() → ChromaDB</li>
+      </ul>
+    </div>
+    <div class="arch-node">
+      <span class="arch-icon">🐍</span>
+      <p class="arch-name">Python Memory</p>
+      <p class="arch-sub">Flask · Port 8000</p>
+      <ul class="arch-items">
+        <li>POST /memory/save</li>
+        <li>POST /memory/get</li>
+        <li>ChromaPersistentClient</li>
+        <li>UUID v4 doc IDs</li>
+      </ul>
+    </div>
+    <div class="arch-node">
+      <span class="arch-icon">🌐</span>
+      <p class="arch-name">Mistral LLM</p>
+      <p class="arch-sub">OpenRouter API</p>
+      <ul class="arch-items">
+        <li>mistral-small-3.1-24b</li>
+        <li>20 req/min · 200/day</li>
+        <li>Bearer token auth</li>
+        <li>temp: 0.7</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ══════════ FEATURE WORKFLOWS ══════════ -->
+  <div class="sec-label">Feature Workflows</div>
+  <div class="features-grid" style="margin-bottom:40px;">
+
+    <!-- Feature 1 -->
+    <div class="feat">
+      <div class="feat-head">
+        <div class="feat-num">1</div>
+        <div>
+          <p class="feat-title"><span class="feat-emoji">▶</span> Summarize Video</p>
+        </div>
+      </div>
+      <div class="steps">
+        <div class="step"><div class="step-n">1</div><p class="step-body"><strong>FRONTEND</strong> — User clicks button → <code>analyzeVideo()</code> called. Hooks into YouTube IFrame API to pull captions.</p></div>
+        <div class="step"><div class="step-n">2</div><p class="step-body"><strong>FALLBACK</strong> — No captions? Falls back to Watch History URLs stored in LocalStorage.</p></div>
+        <div class="step"><div class="step-n">3</div><p class="step-body"><strong>TRUNCATION</strong> — Caption text capped at 3 000 chars to prevent context-window overflow.</p></div>
+        <div class="step"><div class="step-n">4</div><p class="step-body"><strong>MEMORY</strong> — ChromaDB injects past relevant memories. Augmented prompt sent to Mistral.</p></div>
+        <div class="step"><div class="step-n">5</div><p class="step-body"><strong>RESPONSE</strong> — AI returns structured bullet summary, saved to ChromaDB for future context.</p></div>
+      </div>
     </div>
 
-    <div class="pipe-card">
-      <span class="pipe-badge b-mem">MEMORY</span>
-      <span class="pipe-icon">💾</span>
-      <div class="pipe-title">Save to ChromaDB</div>
-      <div class="pipe-desc">Prompt + Response concatenated and stored as new vector embedding in user's collection. Enriches future context retrieval automatically.</div>
+    <!-- Feature 2 -->
+    <div class="feat">
+      <div class="feat-head">
+        <div class="feat-num">2</div>
+        <div>
+          <p class="feat-title"><span class="feat-emoji">💬</span> Follow-up Chat</p>
+        </div>
+      </div>
+      <div class="steps">
+        <div class="step"><div class="step-n">1</div><p class="step-body"><strong>INPUT</strong> — User types vague follow-up: <em>"explain the second point more"</em></p></div>
+        <div class="step"><div class="step-n">2</div><p class="step-body"><strong>VECTOR SEARCH</strong> — ChromaDB vectorizes phrase, finds cosine-similar past interactions.</p></div>
+        <div class="step"><div class="step-n">3</div><p class="step-body"><strong>INJECT</strong> — Previous summary returned as context. Mistral receives vague prompt + full prior context.</p></div>
+        <div class="step"><div class="step-n">4</div><p class="step-body"><strong>INFERENCE</strong> — Model infers "second point" = Question 2 of the previous response. Seamless continuation.</p></div>
+        <div class="step"><div class="step-n">5</div><p class="step-body"><strong>SAVE</strong> — This Q&A pair saved → richer context over time, building episodic memory.</p></div>
+      </div>
+    </div>
+
+    <!-- Feature 3 -->
+    <div class="feat">
+      <div class="feat-head">
+        <div class="feat-num">3</div>
+        <div>
+          <p class="feat-title"><span class="feat-emoji">📋</span> Refine Notes</p>
+        </div>
+      </div>
+      <div class="steps">
+        <div class="step"><div class="step-n">1</div><p class="step-body"><strong>COLLECTION</strong> — Scrapes <code>cleanViewerNotes()</code> from LocalStorage. Joins with <code>\n</code> formatting.</p></div>
+        <div class="step"><div class="step-n">2</div><p class="step-body"><strong>VALIDATE</strong> — If array length = 0, halts and alerts user. No empty API calls made.</p></div>
+        <div class="step"><div class="step-n">3</div><p class="step-body"><strong>PROMPT</strong> — AI instructed to group concepts, fix errors, structure beautifully, add 2 study tips.</p></div>
+        <div class="step"><div class="step-n">4</div><p class="step-body"><strong>OUTPUT</strong> — Mistral returns polished study guide with appended further-study recommendations.</p></div>
+      </div>
+    </div>
+
+    <!-- Feature 4 -->
+    <div class="feat">
+      <div class="feat-head">
+        <div class="feat-num">4</div>
+        <div>
+          <p class="feat-title"><span class="feat-emoji">🚗</span> Auto Quiz</p>
+        </div>
+      </div>
+      <div class="steps">
+        <div class="step"><div class="step-n">1</div><p class="step-body"><strong>SOURCE</strong> — Pulls latest notes from LocalStorage. Truncated to 2 000 chars for focused reasoning.</p></div>
+        <div class="step"><div class="step-n">2</div><p class="step-body"><strong>RAG BOOST</strong> — ChromaDB auto-injects video summaries. Quiz integrates both notes + watched content.</p></div>
+        <div class="step"><div class="step-n">3</div><p class="step-body"><strong>CONSTRAINTS</strong> — Model must: A/B/C/D format, only use provided context, obscure answers until bottom.</p></div>
+        <div class="step"><div class="step-n">4</div><p class="step-body"><strong>OUTPUT</strong> — 3 MCQ questions generated. Saved to memory for follow-up "explain Q2" continuity.</p></div>
+      </div>
     </div>
 
   </div>
-</section>
 
-<!-- ══ SYSTEM ARCH + FEATURE WORKFLOWS ══ -->
-<div class="two-col">
+  <!-- ══════════ MEMORY ARCHITECTURE ══════════ -->
+  <div class="hr"><div class="hr-diamond"></div></div>
+  <div class="sec-label">Memory Architecture — ChromaDB Vector Store</div>
 
-  <section>
-    <div class="sec-label">SYSTEM ARCHITECTURE</div>
-    <div class="arch-col">
+  <p class="body-text big-text" style="text-align:center; margin-bottom:36px; font-style:italic;">
+    Memory Accumulation Over Time
+  </p>
 
-      <div class="arch-card">
-        <div class="arch-hdr">
-          <div class="arch-icon">🖥️</div>
-          <div>
-            <div class="arch-title">Browser Frontend</div>
-            <div class="arch-sub">index.html · Vanilla JS · YouTube IFrame API</div>
-          </div>
-        </div>
-        <div class="tag-row">
-          <span class="tag bl">sendChatMessage()</span>
-          <span class="tag bl">analyzeVideo()</span>
-          <span class="tag bl">analyzeNotes()</span>
-          <span class="tag bl">generateQuiz()</span>
-          <span class="tag">LocalStorage session ID</span>
-          <span class="tag">Caption extraction</span>
-        </div>
-        <div class="http-line"><span class="m">HTTP POST</span>&nbsp;/ask · { taskType, prompt, userId, apiKey }</div>
-      </div>
-
-      <div class="arch-card">
-        <div class="arch-hdr">
-          <div class="arch-icon">⚙️</div>
-          <div>
-            <div class="arch-title">Node.js AI Server</div>
-            <div class="arch-sub">Express · Port 3000 · index.js + agent.js</div>
-          </div>
-        </div>
-        <div class="tag-row">
-          <span class="tag gr">routePrompt()</span>
-          <span class="tag gr">getLLM()</span>
-          <span class="tag gr">ChatOpenAI</span>
-          <span class="tag gr">LangChain pipeline</span>
-          <span class="tag bl">getMemory() → ChromaDB</span>
-          <span class="tag bl">saveMemory() → ChromaDB</span>
-        </div>
-        <div class="server-grid">
-          <div class="server-card">
-            <div class="server-hdr">
-              <div class="server-icon">🐍</div>
-              <div>
-                <div class="server-name">Python Memory Server</div>
-                <div class="server-sub">Flask · Port 8000 · chroma_api.py</div>
-              </div>
-            </div>
-            <div class="server-meta">
-              <span>POST /memory/save</span>
-              <span>POST /memory/get</span>
-              <span>ChromaPersistentClient</span>
-              <span>UUID v4 doc IDs</span>
-            </div>
-          </div>
-          <div class="server-card">
-            <div class="server-hdr">
-              <div class="server-icon">🌐</div>
-              <div>
-                <div class="server-name">OpenRouter · Mistral</div>
-                <div class="server-sub">mistral-small-3.1-24b-instruct:free</div>
-              </div>
-            </div>
-            <div class="server-meta">
-              <span>20 req/min · 200 req/day</span>
-              <span>Bearer token auth</span>
-              <span>temp: 0.7</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
+  <div class="mem-timeline" style="margin-bottom:44px;">
+    <div class="mem-node">
+      <div class="mem-circle">INT<br>1</div>
+      <p class="mem-text">User asks about <strong class="gold-text">Python</strong> → saved as vector to ChromaDB</p>
     </div>
-  </section>
-
-  <section>
-    <div class="sec-label">FEATURE WORKFLOWS</div>
-    <div class="wf-grid">
-
-      <!-- 1 Summarize Video -->
-      <div class="wf-card">
-        <div class="wf-hdr">
-          <div class="wf-num n1">1</div>
-          <div>
-            <div class="wf-title">▶ Summarize Video</div>
-            <div class="wf-sub">Caption extraction → AI summary</div>
-          </div>
-        </div>
-        <div class="steps">
-          <div class="step"><div class="snum">1</div><div><div class="slabel">FRONTEND</div><div class="stext">User clicks button → <code>analyzeVideo()</code> called. Hooks into YouTube IFrame API for captions.</div></div></div>
-          <div class="step"><div class="snum">2</div><div><div class="slabel">FALLBACK</div><div class="stext">No captions? Falls back to Watch History URLs from LocalStorage.</div></div></div>
-          <div class="step"><div class="snum">3</div><div><div class="slabel">TRUNCATION</div><div class="stext">Caption text capped at <span class="ho">3,000 chars</span> to prevent context window overflow.</div></div></div>
-          <div class="step"><div class="snum">4</div><div><div class="slabel">MEMORY</div><div class="stext">ChromaDB injects past relevant memories. Prompt sent to Mistral.</div></div></div>
-          <div class="step"><div class="snum">5</div><div><div class="slabel">RESPONSE</div><div class="stext">AI returns structured bullet summary. Saved to ChromaDB for future context.</div></div></div>
-        </div>
-      </div>
-
-      <!-- 2 Follow-up Chat -->
-      <div class="wf-card">
-        <div class="wf-hdr">
-          <div class="wf-num n2">2</div>
-          <div>
-            <div class="wf-title">💬 Follow-up Chat</div>
-            <div class="wf-sub">Episodic memory loop</div>
-          </div>
-        </div>
-        <div class="steps">
-          <div class="step"><div class="snum">1</div><div><div class="slabel">INPUT</div><div class="stext">User types vague follow-up: "explain the second point more"</div></div></div>
-          <div class="step"><div class="snum">2</div><div><div class="slabel">VECTOR SEARCH</div><div class="stext">ChromaDB vectorizes the phrase, finds cosine-similar past interactions.</div></div></div>
-          <div class="step"><div class="snum">3</div><div><div class="slabel">INJECT</div><div class="stext">Previous summary returned as context. Mistral receives vague prompt + full prior context.</div></div></div>
-          <div class="step"><div class="snum">4</div><div><div class="slabel">INFERENCE</div><div class="stext">Model infers "second point" = Question 2 of the previous response. Seamless continuation.</div></div></div>
-          <div class="step"><div class="snum">5</div><div><div class="slabel">SAVE</div><div class="stext">This Q&amp;A pair saved → richer context over time, building episodic memory.</div></div></div>
-        </div>
-      </div>
-
-      <!-- 3 Refine Notes -->
-      <div class="wf-card">
-        <div class="wf-hdr">
-          <div class="wf-num n3">3</div>
-          <div>
-            <div class="wf-title">📋 Refine Notes</div>
-            <div class="wf-sub">Notes → structured study guide</div>
-          </div>
-        </div>
-        <div class="steps">
-          <div class="step"><div class="snum">1</div><div><div class="slabel">COLLECTION</div><div class="stext">Scrapes <code>cleanViewerNotes()</code> from LocalStorage. Joins with <code>\n</code> formatting.</div></div></div>
-          <div class="step"><div class="snum">2</div><div><div class="slabel">VALIDATE</div><div class="stext">If array length = 0, halts and alerts user. No empty API calls.</div></div></div>
-          <div class="step"><div class="snum">3</div><div><div class="slabel">PROMPT</div><div class="stext">AI instructed to: group concepts, fix errors, structure beautifully, add 2 study tips.</div></div></div>
-          <div class="step"><div class="snum">4</div><div><div class="slabel">OUTPUT</div><div class="stext">Mistral returns polished, corrected study guide with appended further study recommendations.</div></div></div>
-        </div>
-      </div>
-
-      <!-- 4 Auto Quiz -->
-      <div class="wf-card">
-        <div class="wf-hdr">
-          <div class="wf-num n4">4</div>
-          <div>
-            <div class="wf-title">🚗 Auto Quiz</div>
-            <div class="wf-sub">Notes + memory → MCQ quiz</div>
-          </div>
-        </div>
-        <div class="steps">
-          <div class="step"><div class="snum">1</div><div><div class="slabel">SOURCE</div><div class="stext">Pulls latest notes from LocalStorage. Truncated to <span class="hp">2,000 chars</span> for focused reasoning.</div></div></div>
-          <div class="step"><div class="snum">2</div><div><div class="slabel">RAG BOOST</div><div class="stext">ChromaDB auto-injects video summaries. Quiz integrates notes + watched content.</div></div></div>
-          <div class="step"><div class="snum">3</div><div><div class="slabel">CONSTRAINTS</div><div class="stext">Model must: A/B/C/D format, only use provided context, obscure answers until bottom.</div></div></div>
-          <div class="step"><div class="snum">4</div><div><div class="slabel">OUTPUT</div><div class="stext">3 MCQ questions generated. Saved to memory for follow-up "explain Q2" continuity.</div></div></div>
-        </div>
-      </div>
-
+    <div class="mem-node">
+      <div class="mem-circle">INT<br>2</div>
+      <p class="mem-text">User asks about <strong class="gold-text">loops</strong> → ChromaDB returns Python context → answer references both</p>
     </div>
-  </section>
-</div>
-
-<!-- ══ MEMORY ARCHITECTURE ══ -->
-<section>
-  <div class="sec-label">MEMORY ARCHITECTURE — CHROMADB VECTOR STORE</div>
-  <div class="mem-grid">
-
-    <div class="mem-card">
-      <div class="mem-title">Memory Accumulation Over Time</div>
-
-      <div class="mem-item">
-        <span class="midx i1">INT 1</span>
-        User asks about Python → <span class="hl-g">&nbsp;Saved as vector to ChromaDB</span>
-      </div>
-      <div class="mem-item">
-        <span class="midx i2">INT 2</span>
-        User asks about loops → ChromaDB returns Python context → <span class="hl-b">&nbsp;Answer references Python + loops</span>
-      </div>
-      <div class="mem-item">
-        <span class="midx i3">INT 3</span>
-        User asks "give me a quiz" → ChromaDB returns Python + loops → <span class="hl-p">&nbsp;Quiz auto-targets Python loops!</span>
-      </div>
-
-      <div class="vs-title">Why Vector DB vs Traditional DB</div>
-      <div class="vs-grid">
-        <div class="vs-box vs-trad">
-          <div class="vs-lbl">TRADITIONAL DB</div>
-          <div class="vs-desc">Exact keyword match only. Query "loops" finds only docs containing "loops". No semantic understanding.</div>
-        </div>
-        <div class="vs-box vs-chroma">
-          <div class="vs-lbl">CHROMADB VECTORS</div>
-          <div class="vs-desc">Semantic similarity search. "Loops" finds iteration, for/while, repetition. Ranked by meaning proximity.</div>
-        </div>
-      </div>
+    <div class="mem-node">
+      <div class="mem-circle">INT<br>3</div>
+      <p class="mem-text">User asks <strong class="gold-text">"give me a quiz"</strong> → ChromaDB returns Python + loops → quiz auto-targets Python loops!</p>
     </div>
+  </div>
 
-    <div class="mem-card">
-      <div class="ch-hdr">
-        <div class="ch-icon">📦</div>
-        <div class="ch-title">ChromaDB — PersistentClient</div>
-      </div>
-      <div class="ch-sub">/chroma_db · Data survives server restarts · Per-user isolation</div>
+  <div class="compare">
+    <div class="cmp-box bad">
+      <p class="cmp-title">✗ Traditional DB</p>
+      <p>Exact keyword match only. Query "loops" finds only docs containing "loops". No semantic understanding of concepts.</p>
+    </div>
+    <div class="cmp-box good">
+      <p class="cmp-title">✓ ChromaDB Vectors</p>
+      <p>Semantic similarity search. "Loops" finds iteration, for/while, repetition — ranked by meaning proximity, not just text.</p>
+    </div>
+  </div>
 
-      <table>
+  <div class="card mt24">
+    <p class="card-title">📦 ChromaDB — PersistentClient</p>
+    <p class="body-text" style="margin-bottom:16px;">/chroma_db · Data survives server restarts · Per-user isolation</p>
+    <table class="tbl">
+      <thead>
+        <tr><th>Field</th><th>Value</th></tr>
+      </thead>
+      <tbody>
         <tr><td>Collection</td><td>memory_{userId} — unique per browser session</td></tr>
         <tr><td>Documents</td><td>Concatenated prompt + " " + response strings</td></tr>
         <tr><td>Embeddings</td><td>Auto-generated by ChromaDB default embedding function</td></tr>
         <tr><td>IDs</td><td>UUID v4 — unique per stored interaction</td></tr>
         <tr><td>Retrieval</td><td>Top 3 cosine-similar results per query</td></tr>
         <tr><td>Metadata</td><td>{ user_id: "user_..." } for isolation</td></tr>
-      </table>
+      </tbody>
+    </table>
+  </div>
 
-      <div class="session-box">
-        <div class="session-lbl">SESSION ID FLOW</div>
-        <div class="session-txt">
-          Generated once on first visit as <code>user_ + timestamp</code>. Stored in localStorage. Sent as userId on every request. Ensures isolated ChromaDB collection per browser session.
-        </div>
-      </div>
+  <div class="session-box">
+    <p><strong>Session ID Flow</strong> — Generated once on first visit as <strong>user_ + timestamp</strong>. Stored in localStorage. Sent as userId on every request. Ensures an isolated ChromaDB collection per browser session, so no user ever bleeds context into another.</p>
+  </div>
+
+  <!-- ══════════ AI PERSPECTIVE ══════════ -->
+  <div class="hr" style="margin-top:44px;"><div class="hr-diamond"></div></div>
+  <div class="sec-label">A.I. Perspective</div>
+  <div class="perspective">
+    <p>
+      This system showcases crucial AI concepts like <strong>large search spaces</strong>, <strong>semantic pruning</strong>,
+      <strong>combinatorial efficiency</strong>, and <strong>heuristic retrieval</strong>. RAG is not just an API call —
+      it is a <strong>pipeline that grows smarter with use</strong>. Vector embeddings allow the system to reason about
+      meaning, not keywords, making follow-up conversations feel genuinely intelligent. It's a foundational pattern
+      for any production AI assistant.
+    </p>
+  </div>
+
+  <!-- ══════════ FOOTER ══════════ -->
+  <div class="hr" style="margin-top:44px;"><div class="hr-diamond"></div></div>
+  <footer class="footer">
+    <div class="footer-names">
+      
     </div>
+    <div class="footer-stack">
+      <span>LangChain 0.0.165</span>
+      <span>Mistral Small 3.1 24B</span>
+      <span>ChromaDB</span>
+      <span>OpenRouter</span>
+      <span>Express 5.1.0</span>
+      <span>Flask · Python 3.13</span>
+    </div>
+    <p style="margin-top:16px; font-size:14px; color:var(--dim); letter-spacing:2px; font-family:'Cinzel',serif;">
+      AI LEARNING HUB · AdReduce · March 25, 2026
+    </p>
+  </footer>
 
-  </div>
-</section>
-
-<!-- ══ FOOTER ══ -->
-<footer>
-  <div class="footer-l">Built with <span class="heart">♥</span>&nbsp; AI Learning Hub &nbsp;·&nbsp; AdReduce &nbsp;·&nbsp; March 25, 2026</div>
-  <div class="footer-r">
-    <span class="ftag">LangChain 0.0.165</span>
-    <span class="ftag">Mistral Small 3.1 24B</span>
-    <span class="ftag">ChromaDB</span>
-    <span class="ftag">OpenRouter</span>
-    <span class="ftag">Express 5.1.0</span>
-    <span class="ftag">Flask · Python 3.13</span>
-  </div>
-</footer>
-
+</div>
 </body>
 </html>
